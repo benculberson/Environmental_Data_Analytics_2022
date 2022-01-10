@@ -1,6 +1,6 @@
 ---
 title: "Assignment 1: Introduction"
-author: "Student Name"
+author: "Ben Culberson"
 output: pdf_document
 geometry: margin=2.54cm
 ---
@@ -22,21 +22,21 @@ The completed exercise is due on <>.
 
 1. What are your previous experiences with data analytics, R, and Git? Include both formal and informal training.
 
-> Answer: 
+> Answer: I have had several classes and projects that deal with both statistical analysis and R, including Time Series Analysis last year. In that class, I used Git as a means of interfacing with the lessons and assignments.
 
 2. Are there any components of the course about which you feel confident?
 
-> Answer: 
+> Answer: I feel reasonably competent at github and R studio, but not enough for me to brag about it. I think I'll need a refresher for both in this course. Some of the basic R functions come back to me quickly, but a further dive into data analytics is why I'm here.
 
 3. Are there any components of the course about which you feel apprehensive?
 
-> Answer: 
+> Answer: I'm a little nervous about keeping this class balanced with everything else, but other than that I'm happy.
 
 
 ## 2) GitHub
 
 Provide a link below to your forked course repository in GitHub. Make sure you have pulled all recent changes from the course repository  and that you have updated your course README file. 
 
-> Answer: 
+> Answer: https://github.com/benculberson/Environmental_Data_Analytics_2022.git
 
 

@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -170,6 +170,10 @@ simplemeal <- recipe1(5)
 
 # Serve the recipe
 simplemeal
+```
+```{r}
+poorly_cooked_meal <- recipe1(55)
+poorly_cooked_meal 
 ```
 
 Two single ingredient recipes, baked at the same time: 
