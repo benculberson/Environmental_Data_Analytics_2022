@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 
@@ -20,7 +20,7 @@ In many situations in data analytics, you may be expected to work from multiple 
 
 ### Set your working directory
 
-A session in RStudio will always function by mapping to a specific folder in your computer, called the *working directory*. All navigation between folders and files will happen relative to this working directory. When you open an R project, your working directory will automatically set to the folder that holds the project file. If you open an R script or RMarkdown document directly by double-clicking the file, your working directory will automatically set to the folder that holds that file. It is a good idea to note with a comment at the top of your file which working directory you intend the user to designate.
+A session in RStudio will always function by mapping to a specific folder in your computer, called the *working directory*. All navigation between folders and files will happen relative to this working directory. When you open an R project, your working directory will automatically set to the folder that holds the project file. If you open an R script or RMarkdown document directly by double-clicking the file, you're working directory will automatically set to the folder that holds that file. It is a good idea to note with a comment at the top of your file which working directory you intend the user to designate.
 
 In this course, we will always open the R project file for the course, and additional navigation of the working directory will happen from that folder. To check your working directory, use the following R command: 
 
@@ -35,7 +35,7 @@ If your working directory is not set to the folder you want, you have several op
 
 ```{r}
 # Absolute file path is commented out
-setwd("/Users/lmm89/OneDrive/Duke_University/7_Spring2021/ENV872_EDA/GitRepo_EDA_S2021/Environmental_Data_Analytics_2021")
+#setwd("/Users/lmm89/OneDrive/Duke_University/7_Spring2021/ENV872_EDA/GitRepo_EDA_S2021/Environmental_Data_Analytics_2021")
 ```
 
 You may change your working directory without coding by going to the Session menu in RStudio and navigating to the Set Working Directory tab. From there, you may select from a series of options to reset your working directory. 
@@ -78,7 +78,7 @@ library(tidyverse)
 
 Question: What happens in the console when you load a package?
 
-> Answer: 
+> Answer: I get an attaching packages indicator for 6 packages and a conflicts indicator (specifically for dplyr). It does appear that everything has worked however.
 
 ### Import your datasets
 
@@ -119,16 +119,17 @@ USGS.flow.data <- read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv")
 ## EXPLORE YOUR DATASET
 
 Take a moment to read through the README file associated with the USGS dataset on discharge at the Eno River. Where can you find this file? How does the placement and information found in this file relate to the best practices for reproducible data analysis?
-> ANSWER: 
+> ANSWER: I can find this file in the metadata folder. This is in a folder that describes the data in my raw data folder. This file also describes how to reproduce the data again if we so wished, ideal for any individual trying to reproduce our study using the data from the USGS site.
 
 ```{r exploredata}
 View(USGS.flow.data)
 # Alternate option: click on data frame in Environment tab
 
-class(USGS.flow.data)
+class(USGS.flow.data) #we want to check to make sure this is a dataframe
 colnames(USGS.flow.data)
 
 # Rename columns
+#the c function is short for columnbind which takes a vector of data
 colnames(USGS.flow.data) <- c("agency_cd", "site_no", "datetime", 
                               "discharge.max", "discharge.max.approval", 
                               "discharge.min", "discharge.min.approval", 
@@ -145,7 +146,7 @@ head(USGS.flow.data, 10)
 tail(USGS.flow.data, 5)
 USGS.flow.data[30000:30005, c(3, 8, 14)]
 
-class(USGS.flow.data$datetime)
+class(USGS.flow.data$datetime)#checking the class of these columns
 class(USGS.flow.data$discharge.mean)
 class(USGS.flow.data$gage.height.mean)
 
@@ -154,7 +155,7 @@ summary(USGS.flow.data)  #could point to column only with $
 ```
 
 What happened to blank cells in the spreadsheet when they were imported into R?
-> Answer: 
+> Answer: They were recorded as NAs
 
 ## Adjusting Datasets
 
@@ -163,15 +164,15 @@ What happened to blank cells in the spreadsheet when they were imported into R?
 Notice in our dataset that our discharge and gage height observations have many NAs, meaning no measurement was recorded for a specific day. In some cases, it might be in our best interest to remove NAs from a dataset. Removing NAs or not will depend on your research question.
 
 ```{r findNA}
-summary(USGS.flow.data$discharge.mean)
+summary(USGS.flow.data$discharge.mean) #shows the number of NAs in the data set
 summary(USGS.flow.data$gage.height.mean)
 ```
 Question: What types of research questions might make it favorable to remove NAs from a dataset, and what types of research questions might make it favorable to retain NAs in the dataset?
 
-> Answer: 
+> Answer: If we have a time series research question and the NAs are at the beginning of the data, we may want to remove the NAs. If the NAs are in the middle of the data set, we may want to retain the NAs.
 
 ```{r removeNA}
-USGS.flow.data.complete <- na.omit(USGS.flow.data)
+USGS.flow.data.complete <- na.omit(USGS.flow.data) #this removes the NAs (there are a lot)
 dim(USGS.flow.data)
 dim(USGS.flow.data.complete)
 
@@ -183,7 +184,7 @@ summary(USGS.flow.data.complete$discharge.mean)
 
 ### Formatting dates
 
-R will often import dates as factors or characters rather than dates. To fix, this we need to tell R that it is looking at dates. We also need to specify the format the dates are in. By default, if you don't provide a format, R will attempt to use %Y-%m-%d or %Y/%m/%d as a default. Note: if you are working collaboratively in an international setting, using a year-month-day format in spreadsheets is the least ambiguous of date formats. Make sure to check whether month-day-year or day-month-year is used in an ambiguously formatted spreadsheet.
+R will often import dates as factors or characters rather than dates. To fix, this we need to tell R that it is looking at dates. We also need to specify the format the dates are in. By default, if you don't provide a format, R will attempt to use %Y-%m-%d or %Y/%m/%d (capitalization makes a huge difference) as a default. Note: if you are working collaboratively in an international setting, using a year-month-day format in spreadsheets is the least ambiguous of date formats. Make sure to check whether month-day-year or day-month-year is used in an ambiguously formatted spreadsheet.
 
 Formatting of dates in R: 
 
@@ -205,19 +206,19 @@ help(as.Date)
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%m/%d/%y") 
 ```
 
-Note that for every date prior to 1969, R has assigned the date in the 2000s rather than the 1900s. This can be fixed with an `ifelse` statement inside a function. Run through the code below and write what is happening in the comment above each line.
+Note that for every date prior to 1969 (CRAP), R has assigned the date in the 2000s rather than the 1900s. This can be fixed with an `ifelse` statement inside a function. Run through the code below and write what is happening in the comment above each line.
 
 ```{r fixformartDate}
 # 
 USGS.flow.data$datetime <- format(USGS.flow.data$datetime, "%y%m%d")
-
+#the format function puts the data back into a character 2027-10-01 is now 271001
 #
 create.early.dates <- (function(d) {
        paste0(ifelse(d > 191226,"19","20"),d)
        })
 #
 USGS.flow.data$datetime <- create.early.dates(USGS.flow.data$datetime)
-
+#this function replaces the column with the function that we've created
 #
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%Y%m%d") 
 
