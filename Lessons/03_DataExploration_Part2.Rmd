@@ -39,10 +39,12 @@ str(USGS.flow.data)
 dim(USGS.flow.data)
 
 # Check our date column
-class(USGS.flow.data$datetime)
+class(USGS.flow.data$datetime) #we're checking to make sure the dates are dates
+#after running this, it appears that the dates are class "character"
 
 USGS.flow.data$datetime <- as.Date(USGS.flow.data$datetime, format = "%Y-%m-%d") 
-class(USGS.flow.data$datetime)
+class(USGS.flow.data$datetime) #we want a "date" now
+
 
 ```
 
@@ -67,19 +69,19 @@ ggplot(USGS.flow.data, aes(x = discharge.mean.approval)) +
 Visualize distributions of values for continuous numerical variables. What is happening in each line of code? Insert a comment above each line.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+#Note the data is above the aesthetics
 ggplot(USGS.flow.data) +
-  geom_histogram(aes(x = discharge.mean))
+  geom_histogram(aes(x = discharge.max))
 
-#
+#Note the changed bin width
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), binwidth = 10)
 
-#
+#Note the changed number of bins
 ggplot(USGS.flow.data) +
   geom_histogram(aes(x = discharge.mean), bins = 20)
 
-#
+#This keeps the x axis from going beyond 500 (the scale_x_continuous)
 ggplot(USGS.flow.data, aes(x = discharge.mean)) +
   geom_histogram(binwidth = 10) + 
   scale_x_continuous(limits = c(0, 500))
@@ -94,14 +96,14 @@ ggplot(USGS.flow.data) +
 An alternate to a histogram is a frequency polygon graph (distributions of values for continuous numerical variables). Instead of displaying bars,  counts of continuous variables are displayed as lines. This is advantageous if you want to display multiple variables or categories of variables at once.
 
 ```{r, fig.height = 3, fig.width = 4}
-#
+#This is a stacked set of data visualization
 ggplot(USGS.flow.data) +
   geom_freqpoly(aes(x = gage.height.mean), bins = 50) +
-  geom_freqpoly(aes(x = gage.height.min), bins = 50, color = "darkgray") +
+  geom_freqpoly(aes(x = gage.height.min), bins = 50, color = "red") +
   geom_freqpoly(aes(x = gage.height.max), bins = 50,  lty = 2) +
   scale_x_continuous(limits = c(0, 10))
 
-#
+#In this one, we're literally coloring the value based on the categorical data in the other variable
 ggplot(USGS.flow.data) +
   geom_freqpoly(aes(x = gage.height.mean, color = gage.height.mean.approval), bins = 50) +
   scale_x_continuous(limits = c(0, 10)) +
@@ -127,11 +129,11 @@ An alternate option is a violin plot, which displays density distributions, some
 ggplot(USGS.flow.data) +
   geom_boxplot(aes(x = gage.height.mean.approval, y = gage.height.mean))
 
-#
+#Taking different slices of the data and looking at the distribution, like a histogram of box plots
 ggplot(USGS.flow.data) +
   geom_boxplot(aes(x = gage.height.mean, y = discharge.mean, group = cut_width(gage.height.mean, 1)))
 
-#
+#Shows the range of values, and the distribution within those ranges, we can see the same IQR and median but with a width that corresponds to frequency
 ggplot(USGS.flow.data) +
   geom_violin(aes(x = gage.height.mean.approval, y = gage.height.mean), 
               draw_quantiles = c(0.25, 0.5, 0.75))
@@ -150,21 +152,21 @@ ggplot(USGS.flow.data) +
 
 Question: under what circumstances would it be beneficial to use each of these graph types (bar plot, histogram, frequency polygon, box-and whisker, violin, scatterplot)?
 
-> Answer: 
+> Answer: Bar-categorical, Histogram, frequency polygon, box and whisker, violin, scatterplot-numerical, but each one shows a different way of illustrating. Perhaps one of each? Depends on the data.
 
 ## Ending discussion
 
 What did you learn about the USGS discharge dataset today? What separate insights did the different graph types offer?
-> Answer: 
+> Answer: THe distribution of the discharge was on display today, I could really see the different ways the water flowed over the course of the data set.
 
 
 How can multiple options for data exploration inform our understanding of our data?
 
-> Answer: 
+> Answer: Each illustration highlights different aspects of the data. No one graph ignores things (to an extent), but each graph brings certain components of the data to the forefront.
 
 
 Do you see any patterns in the USGS data for the Eno River? What might be responsible for those patterns and/or relationships?
 
-> Answer: 
+> Answer: As discussed in the video, the gage height has an interestin polinomial relationsip with the discharge of the river. It appears that as the volume increased, the gage height was slightly slower to respond. Makes sense-the river expands in width a little bit as the waters rise, resulting in a nonlinear relationship.
 
 
