@@ -101,6 +101,12 @@ Commons functions to import datasets and store as data frames are *read.table()*
 
 # Relative file path (friendly for users regardless of machine)
 USGS.flow.data <- read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv")   
+#USGS.flow.data <- read.csv("../Data/Raw/USGS_Site02085000_Flow_Raw.csv", stringAsFactors = TRUE) <- will need this for assignment 3
+#This will import the data as a vector and not a character!!! SUPER IMPORTANT
+#This used to be the default, that is no longer the case and we must adapt
+
+
+
 #For knitting the .Rmd file you need to added an extra "." to the relative path
 # R Markdown documents are compiled in separate R sessions to enhance reproducibility, so you current R console has nothing to do with the compilation of the R Markdown documents.
 
