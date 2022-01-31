@@ -5,7 +5,7 @@ date: "Spring 2021"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -27,7 +27,7 @@ getwd()
 library(tidyverse)
 #install.packages(lubridate)
 library(lubridate)
-NTL.phys.data <- read.csv("./Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv", stringsAsFactors = TRUE)
+NTL.phys.data <- read.csv("../Data/Raw/NTL-LTER_Lake_ChemistryPhysics_Raw.csv", stringsAsFactors = TRUE)
 
 colnames(NTL.phys.data)
 head(NTL.phys.data)
@@ -37,7 +37,8 @@ dim(NTL.phys.data)
 
 class(NTL.phys.data$sampledate)
 # Format sampledate as date
-NTL.phys.data$sampledate <- as.Date(NTL.phys.data$sampledate, format = "%m/%d/%y")
+NTL.phys.data$sampledate <- as.Date(NTL.phys.data$sampledate, format = "%m/%d/%y") #remember this is how we get our dates to not be lame
+
 ```
 
 ## Data Wrangling
@@ -111,15 +112,23 @@ NTL.phys.data.JunethruOctober4 <- filter(NTL.phys.data, daynum %in% c(152:304))
 # filter NTL.phys.data for the year 1999
 # what code do you need to use, based on the class of the variable?
 class(NTL.phys.data$year4)
+NTL.phys.data_edited2 <- NTL.phys.data[NTL.phys.data$year4 == "1999",]
+NTL.phys.data_edited <- filter(NTL.phys.data, year4 == "1999")
+NTL.phys.data_edited
+NTL.phys.data_edited2
 
 # Exercise: 
 # filter NTL.phys.data for Tuesday Lake from 1990 through 1999.
+NTL.phys.data_edited3 <- NTL.phys.data[NTL.phys.data$year4 > 1989,]
+NTL.phys.data_edited3 <- NTL.phys.data_edited3[NTL.phys.data_edited3$year4 < 2000,]
+NTL.phys.data_edited3
 
-
+NTL.phys.data_edited4 <- filter(NTL.phys.data, year4 > 1989 & year4 < 2000)
+NTL.phys.data_edited4 
 ```
 Question: Why don't we filter using row numbers?
 
-> Answer: 
+> Answer: Because we don't want to have to hunt down which row number the period we're looking for begins and ends at.
 
 ### Arrange
 
@@ -133,7 +142,8 @@ NTL.phys.data.depth.descending <- arrange(NTL.phys.data, desc(depth))
 # Arrange NTL.phys.data by temperature, in descending order. 
 # Which dates, lakes, and depths have the highest temperatures?
 
-
+NTL.phys.data.temperature.descending <- arrange(NTL.phys.data, desc(temperature_C))
+NTL.phys.data.temperature.descending
 ```
 ### Select
 
@@ -150,7 +160,7 @@ Mutating allows us to add new columns that are functions of existing columns. Op
 ```{r}
 
 NTL.phys.data.temps <- mutate(NTL.phys.data.temps, temperature_F = (temperature_C*9/5) + 32)
-
+#Hey look we did a conversion
 ```
 
 ## Lubridate
@@ -160,6 +170,7 @@ A package that makes coercing date much easier is `lubridate`. A guide to the pa
 ```{r}
 # add a month column to the dataset
 NTL.phys.data.PeterPaul1 <- mutate(NTL.phys.data.PeterPaul1, month = month(sampledate)) 
+#notice the mutate function does some good work here
 
 # reorder columns to put month with the rest of the date variables
 NTL.phys.data.PeterPaul1 <- select(NTL.phys.data.PeterPaul1, lakeid:daynum, month, sampledate:comments)
@@ -167,6 +178,7 @@ NTL.phys.data.PeterPaul1 <- select(NTL.phys.data.PeterPaul1, lakeid:daynum, mont
 # find out the start and end dates of the dataset
 interval(NTL.phys.data.PeterPaul1$sampledate[1], NTL.phys.data.PeterPaul1$sampledate[21613])
 interval(first(NTL.phys.data.PeterPaul1$sampledate), last(NTL.phys.data.PeterPaul1$sampledate))
+#the second way of doing this is the better way, notice how you don't have to know the last day
 ```
 
 
@@ -179,10 +191,11 @@ Let's say we want to take our raw dataset (NTL.phys.data), *then* filter the dat
 ```{r}
 NTL.phys.data.processed <- 
   NTL.phys.data %>%
-  filter(lakename == "Paul Lake" | lakename == "Peter Lake") %>%
-  select(lakename, sampledate:temperature_C) %>%
-  mutate(temperature_F = (temperature_C*9/5) + 32)
+  filter(lakename == "Paul Lake" | lakename == "Peter Lake") %>% #get it down to those two lakes
+  select(lakename, sampledate:temperature_C) %>% #select [lakename,sampledate:temperature_C] indxing by row, the column
+  mutate(temperature_F = (temperature_C*9/5) + 32) #create a new column
   
+NTL.phys.data.processed
 ```
 
 Notice that we did not place the dataset name inside the wrangling function but rather at the beginning.
@@ -190,11 +203,12 @@ Notice that we did not place the dataset name inside the wrangling function but 
 ### Saving processed datasets
 
 ```{r}
-write.csv(NTL.phys.data.PeterPaul1, row.names = FALSE, file = "./Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
+write.csv(NTL.phys.data.PeterPaul1, row.names = FALSE, file = "../Data/Processed/NTL-LTER_Lake_ChemistryPhysics_PeterPaul_Processed.csv")
 ```
 
 ## Closing Discussion
 
 When we wrangle a raw dataset into a processed dataset, we create a code file that contains only the wrangling code. We then save the processed dataset as a new spreadsheet and then create a separate code file to analyze and visualize the dataset. Why do we keep the wrangling code separate from the analysis code?
 
+So that if we fuck it up, we can go back and change it. Or at least, restart it.
 
