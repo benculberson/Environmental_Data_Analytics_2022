@@ -101,6 +101,8 @@ Test_Results.df$`Pass?` <- as.logical(Test_Results.df$`Pass?`)
 Test_Results.df
 
 #I realize there is a more efficient way to create this dataframe, but this works too
+#test_df <- data.frame("Names" = name_v, "Score" = test_scores_v, "Passing" = pass_v)
+#The above line of code is a better way to create a df, also see lab3
 ```
 
 9. QUESTION: How is this data frame different from a matrix?
