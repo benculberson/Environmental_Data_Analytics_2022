@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -25,14 +25,14 @@ library(tidyverse)
 library(ggridges)
 
 PeterPaul.chem.nutrients <- 
-  read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
+  read.csv("../Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
 PeterPaul.chem.nutrients.gathered <-
-  read.csv("./Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv", stringsAsFactors = TRUE)
-EPAair <- read.csv("./Data/Processed/EPAair_O3_PM25_NC2021_Processed.csv", stringsAsFactors = TRUE)
+  read.csv("../Data/Processed/NTL-LTER_Lake_Nutrients_PeterPaulGathered_Processed.csv", stringsAsFactors = TRUE)
+EPAair <- read.csv("../Data/Processed/EPAair_O3_PM25_NC2021_Processed.csv", stringsAsFactors = TRUE)
 
-EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d")
-PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d")
-PeterPaul.chem.nutrients.gathered$sampledate <- as.Date(PeterPaul.chem.nutrients.gathered$sampledate, format = "%Y-%m-%d")
+EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d") #this is the usual date read in
+PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d") #same for this one
+PeterPaul.chem.nutrients.gathered$sampledate <- as.Date(PeterPaul.chem.nutrients.gathered$sampledate, format = "%Y-%m-%d")#again
 
 ```
 
@@ -83,12 +83,12 @@ ggplot(EPAair, aes(x = Date, y = Ozone)) +
 
 O3plot <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone))
-print(O3plot)
+print(O3plot)#this is just the scatter again, but another way to do it and with a print statement
 
 # Fix this code
 O3plot2 <- ggplot(EPAair) +
-  #geom_point(aes(x = Date, y = Ozone, color = "blue"))
-  geom_point(aes(x = Date, y = Ozone), color = "blue")
+  #geom_point(aes(x = Date, y = Ozone, color = "blue")) #this one prints a random color and calls it blue
+  geom_point(aes(x = Date, y = Ozone), color = "blue") #this one actually colors the scatterplot blue, notice the difference
 print(O3plot2)
 
 # Add additional variables
@@ -96,13 +96,13 @@ print(O3plot2)
 PMplot <- 
   ggplot(EPAair, aes(x = Month, y = PM2.5, shape = as.factor(Year), color = Site.Name)) +
   geom_point()
-print(PMplot)
+print(PMplot) #notice that the difference in shape means a different year, the difference in color means a different location, tbh this is a bit much, but the skill is useful
 
 # Separate plot with facets
 PMplot.faceted <-
   ggplot(EPAair, aes(x = Month, y = PM2.5, shape = as.factor(Year))) +
   geom_point() +
-  facet_wrap(vars(Site.Name), nrow = 3)
+  facet_wrap(vars(Site.Name), nrow = 3) #I guess this breaks apart the scatterplot into seperate little graphs depending on the site
 print(PMplot.faceted)
 
 # Filter dataset within plot building and facet by multiple variables
@@ -113,6 +113,7 @@ PMplot.faceted2 <-
   geom_point() +
   facet_grid(Site.Name ~ Year) 
 print(PMplot.faceted2)
+#here we've broken it down into 3 sites, made the x = month, the y = concentration and faceted using year (there are only two years so only 2 facets)
 
 # Plot true time series with geom_line
 PMplot.line <- 
@@ -120,7 +121,7 @@ PMplot.line <-
          aes(x = Date, y = PM2.5)) +
   geom_line()
 print(PMplot.line)
-
+#this just makes it a line and not a scatterplot, same idea though
 
 ```
 
@@ -133,6 +134,7 @@ lightvsDO <-
   ggplot(PeterPaul.chem.nutrients, aes(x = irradianceWater, y = dissolvedOxygen)) +
   geom_point()
 print(lightvsDO)
+#just a basic scatterplot, looks lame with most data points at such low dissolved oxygen and low irradiance
 
 # Adjust axes
 lightvsDOfixed <- 
@@ -141,20 +143,21 @@ lightvsDOfixed <-
   xlim(0, 250) +
   ylim(0, 20)
 print(lightvsDOfixed)
+#same graph, but we've limited the x and y axes (so we can't see the crazy variables but that's ok)
 
 # Depth in the fields of limnology and oceanography is on a reverse scale
 tempvsdepth <- 
-  ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth)) +
-  #ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth, color = daynum)) +
+  #ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth)) +
+  ggplot(PeterPaul.chem.nutrients, aes(x = temperature_C, y = depth, color = daynum)) + #a color for the day of the year, look how pretty 
   geom_point() +
-  scale_y_reverse()
+  scale_y_reverse() #this reverses the y axis, I suppose you could do that with the x axis too
 print(tempvsdepth)
 
 NvsP <-
   ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +
   geom_point() +
-  geom_smooth(method = lm) +
-  geom_abline(aes(slope = 16, intercept = 0))
+  geom_smooth(method = lm) + #linear sloped trend line
+  geom_abline(aes(slope = 16, intercept = 0)) #setting the slope and the intercept, this is a seperate line to the last one
 print(NvsP)
 
 ```
@@ -168,7 +171,7 @@ What might be more effective ways to display the information? Navigate to the bo
 # Box and whiskers plot
 Nutrientplot3 <-
   ggplot(PeterPaul.chem.nutrients.gathered, aes(x = lakename, y = concentration)) +
-  geom_boxplot(aes(color = nutrient)) # Why didn't we use "fill"?
+  geom_boxplot(aes(color = nutrient)) # Why didn't we use "fill"? Cuz it looks dumb as shit idk
 print(Nutrientplot3)
 
 # Dot plot
@@ -183,6 +186,7 @@ Nutrientplot5 <-
   ggplot(PeterPaul.chem.nutrients.gathered, aes(x = lakename, y = concentration)) +
   geom_violin(aes(color = nutrient)) #
 print(Nutrientplot5)
+#not enough concentrated data, too much variation all we see is a line
 
 # Frequency polygons
 # Using a tidy dataset
@@ -194,14 +198,16 @@ Nutrientplot6 <-
   geom_freqpoly(aes(x = no23), color = "royalblue") +
   geom_freqpoly(aes(x = po4), color = "red") 
 print(Nutrientplot6)
+#this one looks cool, but there's no key-the x-axis says tn_ug but idk which colors correspond to which (the axis label is wrong)
 
 # Using a gathered dataset
 Nutrientplot7 <-   
   ggplot(PeterPaul.chem.nutrients.gathered) +
   geom_freqpoly(aes(x = concentration, color = nutrient))
 print(Nutrientplot7)
+#this works much better, I guess I'll have to gather the data using pivot_longer 
 
-# Frequency polygons have the risk of becoming spaghetti plots. 
+# Frequency polygons have the risk of becoming spaghetti plots. - these are plots that have too many lines so they're hard to follow
 # See <https://www.data-to-viz.com/caveat/spaghetti.html> for more info.
 
 # Ridgeline plot
@@ -209,6 +215,7 @@ Nutrientplot6 <-
   ggplot(PeterPaul.chem.nutrients.gathered, aes(y = nutrient, x = concentration)) +
   geom_density_ridges(aes(fill = lakename), alpha = 0.5) #
 print(Nutrientplot6)
+#another intersting way to do it, not my favorite but maybe when the polygons don't work
 
 
 ```
