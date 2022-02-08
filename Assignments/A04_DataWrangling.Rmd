@@ -124,6 +124,7 @@ write.csv(EPA_PM25_NC2019_select, row.names = FALSE,
 #7
 EPA_combined <- rbind(EPA_O3_NC2018_select, EPA_O3_NC2019_select, 
                       EPA_PM25_NC2018_select, EPA_PM25_NC2019_select)
+dim(EPA_combined)
 
 #8
 EPA_combined <-

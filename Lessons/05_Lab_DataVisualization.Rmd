@@ -5,9 +5,15 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
+```{r}
+library(tidyverse)
+#install.packages("ggridges")
+library(ggridges)
+library(ggplot2)
 
+```
 ## Objectives
 1. Answer questions on M4/A4
 2. Answer questions on M5 videos
@@ -22,7 +28,7 @@ The expression function can be used when you want to add mathematical symbols an
 Plot_text <-
 ggplot(data=data.frame(x=0,y=0))+
   geom_point(aes(x=x,y=y)) +
-  geom_text(x=0,y=0.025,label=expression(paste("Mean is ", mu,",", R^{2},'=0.6')))
+  geom_text(x=0,y=0.025,label=expression(paste("Mean is ", mu,", ", R^{2},'=0.6')))
 print(Plot_text)
 
 ggsave("../Output/Plot_text.jpg",Plot_text, height = 4, width = 6, units = "in", dpi = 300)
@@ -37,15 +43,18 @@ library(tidyverse)
 library(ggridges)
 library(viridis)
 library(RColorBrewer)
-library(colormap)
+#install.packages("colormap")
+#library(colormap)
 
 PeterPaul.chem.nutrients <- 
-  read.csv("./Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
-EPAair <- read.csv("./Data/Processed/EPAair_O3_PM25_NC1819_Processed.csv", stringsAsFactors = TRUE)
+  read.csv("../Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv", stringsAsFactors = TRUE)
+EPAair<- read.csv("../Data/Processed/EPAair_O3_PM25_NC2122_Processed.csv", stringsAsFactors = TRUE) 
 
-EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d")
-PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d")
 
+EPAair$Date <- as.Date(EPAair$Date, format = "%Y-%m-%d") #the usual date thing
+PeterPaul.chem.nutrients$sampledate <- as.Date(PeterPaul.chem.nutrients$sampledate, format = "%Y-%m-%d") #the usual date thing
+
+PeterPaul.chem.nutrients
 ```
 
 
@@ -56,18 +65,32 @@ Exercise: build your own scatterplots of PeterPaul.chem.nutrients
 ```{r, fig.height = 3, fig.width = 4, warning = FALSE}
 
 # 1. 
-# Plot surface temperatures by day of  year. 
-# Color your points by year, and facet by lake in two rows.
-# Change the ylab name
+# Plot surface temperatures by day of  year. (this is why we subset for depth == 0)
+# Color your points by year, and facet by lake in two rows. (the facet creates two graphs, see the lesson)
+# Change the ylab name (the final line of code)
+PeterPaulplt.Ex1 <- 
+  ggplot(subset(PeterPaul.chem.nutrients, depth ==0), aes(x = daynum, y = temperature_C)) +
+  geom_point(aes(color=year4)) +
+  facet_wrap(vars(lakename), nrow =2) +
+  ylab("Surface Temperature")
+print(PeterPaulplt.Ex1)
+
 
 
 #2. 
 # Plot temperature by date. Color your points by depth.
 # Change the size of your point to 0.5
 # Change the color palette to magma and play with direction (+- 1), which one makes more sense?
+#when direction =1 or -1, the colors will flip
 # Change x axis to include marker/labels every 5 years
 
-
+PeterPaulplt.Ex2 <- 
+  ggplot(PeterPaul.chem.nutrients, aes(x = sampledate, y = temperature_C)) +
+  geom_point(aes(color=depth), size = 0.5) + 
+  ylab("Temperature in Celsius") +
+  scale_color_viridis(option = "magma", direction = 1) +
+  scale_x_date(date_breaks = "5 years", date_labels = "%Y")
+print(PeterPaulplt.Ex2)
 
 
 ```
@@ -82,6 +105,10 @@ Exercise: Plot relationships between air quality measurements
 # Make the points 50 % transparent
 # Add a line of best fit for the linear regression of these variables.
 
+Ozone_plot <- ggplot(EPAair, aes(x=PM2.5, y=Ozone)) +
+  geom_point(aes(color=Latitude_mean), alpha=0.5) +
+  geom_smooth(method = lm, color="red")
+print(Ozone_plot)
 
 
 
@@ -97,8 +124,24 @@ Exercise: Plot distributions of AQI values for EPAair.
 # Create several types of plots depicting PM2.5, divided by year. 
 # Choose which plot displays the data best and justify your choice. 
 
+PM2.5_plot <- ggplot(EPAair, aes(x=PM2.5, y=Year)) +
+  geom_point(aes(color=Latitude_mean), alpha=0.5) +
+  geom_smooth(method = lm, color="red")
+print(PM2.5_plot)
 
 
+EPAair$Year <- as.Date(EPAair$Year, format = "%Y", origin ="2018")
+
+PM2.5_plot.Ex2 <- 
+  ggplot(EPAair, aes(x = PM2.5, y=Year)) +
+  geom_point(aes(size = 0.5)) + 
+  ylab("Temperature in Celsius") +
+  scale_color_viridis(option = "magma", direction = 1)
+print(PM2.5_plot.Ex2)
+
+class(EPAair$Year)
+
+#Idk maybe do this later, use that site that help to plot categorical variables
 ```
 
 

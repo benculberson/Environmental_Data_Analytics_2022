@@ -80,6 +80,8 @@ Here are some commonly used aesthetic types that can be manipulated in ggplot:
 # Scatterplot
 ggplot(EPAair, aes(x = Date, y = Ozone)) + 
   geom_point()
+#always use a dateframe to start, not a vector or a time series 
+
 
 O3plot <- ggplot(EPAair) +
   geom_point(aes(x = Date, y = Ozone))
@@ -157,7 +159,7 @@ NvsP <-
   ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth)) +
   geom_point() +
   geom_smooth(method = lm) + #linear sloped trend line
-  geom_abline(aes(slope = 16, intercept = 0)) #setting the slope and the intercept, this is a seperate line to the last one
+  geom_abline(aes(slope = 16, intercept = 0)) #setting the slope and the intercept, this is a separate line to the last one, it's artificial and not created based on the data
 print(NvsP)
 
 ```
