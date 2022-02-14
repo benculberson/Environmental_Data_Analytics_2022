@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -19,7 +19,7 @@ library(tidyverse)
 #install.packages("agricolae")
 library(agricolae)   #you may need to install/update package "htmltools" before installing and loading agricolae
 
-Litter <- read.csv("./Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", stringsAsFactors = TRUE)
+Litter <- read.csv("../Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", stringsAsFactors = TRUE)
 
 # Set date to date format
 Litter$collectDate <- as.Date(Litter$collectDate , format = "%Y-%m-%d")
@@ -48,14 +48,14 @@ summary(Litter.Totals$plotID)
 # Test for normality. 
 # Note: the important assumption for GLMs is normality of residuals, 
 # not necessarily normality of raw data. See below when we plot the model.
-# shapiro.test() performs the Shapiro-Wilk test of the null that data follows a normal distribution
+# shapiro.test() performs the Shapiro-Wilk test of the null that data follows a normal distribution -> thus we determine if we have normal residuals on the following data sets from the following sites
 
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_040"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_041"])
-shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_046"])
+shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_046"]) #normal distribution 
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_047"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_051"])
-shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_057"])
+shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_057"]) #normal distribution
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_058"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_061"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_062"])
@@ -64,20 +64,24 @@ shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_064"])
 shapiro.test(Litter.Totals$dryMass[Litter.Totals$plotID == "NIWO_067"])
 
 #results: reject null in all except two: NIWO_057 and NIWO_046
-qqnorm(Litter.Totals$dryMass); qqline(Litter.Totals$dryMass)
+qqnorm(Litter.Totals$dryMass); qqline(Litter.Totals$dryMass) # we can clearly see here that the data does not follow a normal distribution
 
 # Test for equal variance
-# ANOVA is robust against departures from equal variance.
+# ANOVA is robust against departures from equal variance. <-good news, because we're about to do one
 # bartlett.test() performs Bartlett's test of the null that the variances in each of the groups (samples) are the same.
 bartlett.test(Litter.Totals$dryMass ~ Litter.Totals$plotID)
+#data = dryMass, the levels = plotID
 
 #results: reject null i.e. variances are not equal
 
 # Format ANOVA as aov
 Litter.Totals.anova <- aov(data = Litter.Totals, dryMass ~ plotID)
 summary(Litter.Totals.anova)
+#function aov is called like the lm()
+#start with the dependent variable and then the categorical variable
+#the problem with this is while it helps us determine if the means of all of the plots are the same, it does not tell us whuch 
 
-#results: reject null hypothesis i.e. difference between a pair of group means is statiscally significant
+#results: reject null hypothesis i.e. difference between a pair of group means is statistically significant
 
 # Format ANOVA as lm
 Litter.Totals.anova2 <- lm(data = Litter.Totals, dryMass ~ plotID)
@@ -88,11 +92,12 @@ summary(Litter.Totals.anova2)
 plot(Litter.Totals.anova2)
 
 # Post-hoc test
-# TukeyHSD() computes Tukey Honest Significant Differences
+# TukeyHSD() computes Tukey Honest Significant Differences -> we can tell if the results are significant overall
+#remember, we can only do this with the aov ANOVA
 TukeyHSD(Litter.Totals.anova)
 
 # Extract groupings for pairwise relationships
-Litter.Totals.groups <- HSD.test(Litter.Totals.anova, "plotID", group = TRUE)
+Litter.Totals.groups <- HSD.test(Litter.Totals.anova, "plotID", group = TRUE) #group = TRUE means group levels that have the same mean
 Litter.Totals.groups
 
 # Graph the results
@@ -138,6 +143,8 @@ The output gives test statistics for each explanatory variable as well as the in
 # Format as aov
 Litter.anova.2way3 <- aov(data = Litter, dryMass ~ functionalGroup * nlcdClass)
 summary(Litter.anova.2way3)
+#it appears that the interaction among explanatory variables is significant
+#in this case: the type of shrub affects the biomass of the types of shrub discharge
 
 # Format as lm
 Litter.anova.2way4 <- lm(data = Litter, dryMass ~ functionalGroup * nlcdClass)
@@ -149,22 +156,39 @@ If the interaction is significant, we interpret pairwise differences for the int
 ```{r}
 # Run a post-hoc test for pairwise differences
 TukeyHSD(Litter.anova.2way3)
+#all possible combinations are there, including all possible combinations of class and functional group - so a lot of mean comparisons
 
 Litter.interaction <- with(Litter, interaction(functionalGroup, nlcdClass))
+#this will have 24 levels: functionalGroup*nlcdClass
 
 #Litter.test <- cbind(Litter,Litter.interaction)
 
 Litter.anova.2way5 <- aov(data = Litter, dryMass ~ Litter.interaction)
+#compare the means of the intercations, we're back to a 1 way ANOVA, but we're comparing the interaction of 8 groups and 3 classes
 
 Litter.groups <- HSD.test(Litter.anova.2way5, "Litter.interaction", group = TRUE)
-Litter.groups
+Litter.groups #we've now grouped by means of the interactions that were not statistically different
 
 # Plot the results
 # Edit this graph to make it more visually appealing.
 # Add letters to represent statistical groupings.
-Litter.anova.plot <- ggplot(Litter, aes(y = dryMass, x = nlcdClass, color = functionalGroup)) +
-  geom_boxplot()
+Litter.anova.plot <- ggplot(Litter.anova.2way5, aes(y = dryMass, x = nlcdClass, color = functionalGroup)) +
+  geom_boxplot() +
+  stat_summary(geom = "text", fun = max, size = 3, label = c("a", "b", "bc", "cd", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d")) +
+  labs(x = "Location", y = "Type of Stuff") + 
 print(Litter.anova.plot)
 
+#not sure why labels are all stacked vertically and not horizontally like in hers
+
+
+Litter.Totals.plot <- ggplot(Litter.Totals, aes(x = plotID, y = dryMass)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  stat_summary(geom = "text", fun = max, vjust = -1, size = 3.5,
+               label = c("a", "ab", "bc", "cd", "d", "a", 
+                         "d", "abcd", "cd", "d", "abcd", "abcd")) +
+  labs(x = "Plot ID", y = "Dry Mass (g)") +
+  ylim(0, 85)
+print(Litter.Totals.plot)
 ```
 

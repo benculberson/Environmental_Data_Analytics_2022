@@ -1,10 +1,10 @@
 ---
 title: "Assignment 5: Data Visualization"
-author: "Student Name"
+author: "Benjamin Culberson"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## OVERVIEW
@@ -33,16 +33,37 @@ the processed data file for the Niwot Ridge litter dataset (use the [`NEON_NIWO_
 
 ```{r}
 #1 
+library(tidyverse)
+library(cowplot)
+getwd()
+
+NTL_LTER.processed<-read.csv(
+  "../Data/Processed/NTL-LTER_Lake_Chemistry_Nutrients_PeterPaul_Processed.csv",
+                             stringsAsFactors = TRUE)
+Niwot_Ridge.processed<-read.csv(
+  "../Data/Processed/NEON_NIWO_Litter_mass_trap_Processed.csv", 
+                                stringsAsFactors = TRUE)
 
 #2 
+class(NTL_LTER.processed$sampledate)
+class(Niwot_Ridge.processed$collectDate)
 
+NTL_LTER.processed$sampledate <- as.Date(NTL_LTER.processed$sampledate, format = "%Y-%m-%d")
+Niwot_Ridge.processed$collectDate <- as.Date(Niwot_Ridge.processed$collectDate, format = "%Y-%m-%d")
+
+class(NTL_LTER.processed$sampledate)
+class(Niwot_Ridge.processed$collectDate)
 ```
 ## Define your theme
 3. Build a theme and set it as your default theme.
 
 ```{r}
 #3
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right")
 
+theme_set(mytheme)
 ```
 
 ## Create graphs
@@ -52,7 +73,12 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r}
 #4
-
+NTL_LTER_concentrations <-
+  ggplot(NTL_LTER.processed, aes(x = po4, y = tp_ug, color = lakename)) +
+  geom_point() +
+  geom_smooth(method = lm, color = "black") + 
+  xlim(0,50)
+print(NTL_LTER_concentrations)
 ```
 
 
@@ -60,12 +86,41 @@ For numbers 4-7, create ggplot graphs and adjust aesthetics to follow best pract
 
 ```{r}
 #5
+temperature_box <-ggplot(NTL_LTER.processed) +
+  geom_boxplot(aes(x = month, y = temperature_C, color = lakename)) +
+  labs(y = "Temp (C)", x = "Month", color = "Lake") +
+  theme(legend.position = "none")
+
+print(temperature_box)
+
+TP_box <-ggplot(NTL_LTER.processed) +
+  geom_boxplot(aes(x = month, y = tp_ug, color = lakename)) +
+  labs(y = "TP (Micro g)", x = "Month", color = "Lake") +
+  ylim(0,75) +
+  theme(legend.position = "none")
+
+print(TP_box)
+
+TN_box <-ggplot(NTL_LTER.processed) +
+  geom_boxplot(aes(x = month, y = tn_ug, color = lakename)) +
+  labs(y = "TN (Micro g)", x = "Month", color = "Lake") +
+  ylim(0,1000) +
+  theme(legend.position = "bottom", 
+        legend.text = element_text(size = 8), legend.title = element_text(size = 8))
+
+print(TN_box)
+
+combined_cowplot <- plot_grid(temperature_box, TP_box, TN_box, nrow = 3, 
+                              align = 'hv', rel_heights = c(1, 1, 1.5)) +
+  theme(legend.position = "bottom")
+
+print(combined_cowplot)
 
 ```
 
 Question: What do you observe about the variables of interest over seasons and between lakes? 
 
-> Answer: 
+> Answer: It seems that temperature and concentration of both TP and TN is greater in Peter Lake and during the mid Summer rather than the late Spring. However, from this plot, it seems that the data from the Paul Lake is gathered earlier in the year than the Peter Lake.
 
 6. [Niwot Ridge] Plot a subset of the litter dataset by displaying only the "Needles" functional group. Plot the dry mass of needle litter by date and separate by NLCD class with a color aesthetic. (no need to adjust the name of each land use)
 
@@ -73,11 +128,26 @@ Question: What do you observe about the variables of interest over seasons and b
 
 ```{r}
 #6
+Niwot_Ridge_Needles <- 
+  ggplot(subset(Niwot_Ridge.processed, functionalGroup == "Needles"), 
+         aes(x = collectDate, y = dryMass, color = nlcdClass)) + 
+  labs(title = "Needle Mass", x = "Collect Date", y= "Dry Mass" ) +
+  geom_point()
+
+print(Niwot_Ridge_Needles)
 
 #7
+Niwot_Ridge_Needles_facets <- 
+  ggplot(subset(Niwot_Ridge.processed, functionalGroup == "Needles"), 
+         aes(x = collectDate, y = dryMass)) + 
+  geom_point() +
+  labs(title = "Faceted Needle Mass", x = "Collect Date", y= "Dry Mass" ) +
+  facet_wrap(vars(nlcdClass), nrow = 3) 
+
+print(Niwot_Ridge_Needles_facets)
 
 
 ```
 Question: Which of these plots (6 vs. 7) do you think is more effective, and why? 
 
-> Answer:
+> Answer: In this case, I think plot 7 is more effective. Plot 6 reminds me of a spaghetti plot where there is too much infomration on a single graph such that the viewer cannot follow. The coloration of plot 6 is not useful if one tries to look at each class seperately. Only in plot 7 is there a realistic means of viewing the data in terms of NLCD class and Collect Date. It is possible to view the data in plot 6 in terms of Collect Date, but colors don't split up the NLCD class in a clear way for the viewer.

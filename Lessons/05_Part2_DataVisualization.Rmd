@@ -82,6 +82,11 @@ O3plot5 <- ggplot(EPAair) +
   mytheme
 print(O3plot5)  
 
+O3plot7 <- ggplot(EPAair) +
+  geom_point(aes(x = Date, y = Ozone))
+print(O3plot7)  
+
+
 theme_set(mytheme)
 
 O3plot6 <- ggplot(EPAair) +
@@ -153,18 +158,18 @@ nationalparkcolors (package)
 * https://github.com/katiejolly/nationalparkcolors
 
 ```{r, warning = FALSE}
-install.packages("viridis")
-install.packages("RColorBrewer")
-install.packages("colormap")
+#install.packages("viridis")
+#install.packages("RColorBrewer")
+#install.packages("colormap")
 library(viridis)
 library(RColorBrewer)
 #library(colormap)
 library(ggplot2)
 
-scales::show_col(colormap(colormap = colormaps$viridis, nshades = 16))
-scales::show_col(colormap(colormap = colormaps$inferno, nshades = 16))
-scales::show_col(colormap(colormap = colormaps$magma, nshades = 16))
-display.brewer.all(n = 9)
+#scales::show_col(colormap(colormap = colormaps$viridis, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$inferno, nshades = 16))
+#scales::show_col(colormap(colormap = colormaps$magma, nshades = 16))
+#display.brewer.all(n = 9)
 
 NvsP <-
   ggplot(PeterPaul.chem.nutrients, aes(x = tp_ug, y = tn_ug, color = depth, shape = lakename)) +
@@ -209,7 +214,7 @@ A useful guide for aligning plots by axis can be found here: https://wilkelab.or
 
 ```{r, fig.height = 7, fig.width = 6}
 #install.packages("cowplot")
-#library(cowplot)
+library(cowplot)
 plot_grid(NvsP2, Nutrientplot, nrow = 2, align = 'h', rel_heights = c(1.25, 1))
 #I guess the plot_grid function does what we want huh
 
