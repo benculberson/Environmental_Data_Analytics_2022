@@ -175,7 +175,7 @@ Litter.groups #we've now grouped by means of the interactions that were not stat
 Litter.anova.plot <- ggplot(Litter.anova.2way5, aes(y = dryMass, x = nlcdClass, color = functionalGroup)) +
   geom_boxplot() +
   stat_summary(geom = "text", fun = max, size = 3, label = c("a", "b", "bc", "cd", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d")) +
-  labs(x = "Location", y = "Type of Stuff") + 
+  labs(x = "Location", y = "Type of Stuff")
 print(Litter.anova.plot)
 
 #not sure why labels are all stacked vertically and not horizontally like in hers
