@@ -79,7 +79,7 @@ Litter.Totals.anova <- aov(data = Litter.Totals, dryMass ~ plotID)
 summary(Litter.Totals.anova)
 #function aov is called like the lm()
 #start with the dependent variable and then the categorical variable
-#the problem with this is while it helps us determine if the means of all of the plots are the same, it does not tell us whuch 
+#the problem with this is while it helps us determine if the means of all of the plots are the same, it does not tell us which ones are different
 
 #results: reject null hypothesis i.e. difference between a pair of group means is statistically significant
 
@@ -176,7 +176,8 @@ Litter.anova.plot <- ggplot(Litter.anova.2way5, aes(y = dryMass, x = nlcdClass, 
   geom_boxplot() +
   stat_summary(geom = "text", fun = max, size = 3, label = c("a", "b", "bc", "cd", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d", "d")) +
   labs(x = "Location", y = "Type of Stuff")
-print(Litter.anova.plot)
+
+#print(Litter.anova.plot)
 
 #not sure why labels are all stacked vertically and not horizontally like in hers
 
@@ -189,6 +190,6 @@ Litter.Totals.plot <- ggplot(Litter.Totals, aes(x = plotID, y = dryMass)) +
                          "d", "abcd", "cd", "d", "abcd", "abcd")) +
   labs(x = "Plot ID", y = "Dry Mass (g)") +
   ylim(0, 85)
-print(Litter.Totals.plot)
+#print(Litter.Totals.plot)
 ```
 

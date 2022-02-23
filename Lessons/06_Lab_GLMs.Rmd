@@ -165,7 +165,7 @@ Exercise_2_box.plot <-
   labs(x = "", y = "Ozone AQI Value")
 print(Exercise_2_box.plot)
 
-#the fun.y puts the label on the max y value for each x variable -> that's what's going on in module 6 part 2fellow fucking fff
+#the fun.y puts the label on the max y value for each x variable -> that's what's going on in module 6 part 2fellow fucking off
 
 
 Exercise_2_violin.plot <-
@@ -213,16 +213,36 @@ What other variables can we add to improve model?
 
 #Exercise 5: Build correlation plots and identify more possible explanatory variables to add to the regression.
 
+library(corrplot)
+EPAair_working <- 
+  EPAair %>%
+  select(Year, Month, meanLat:Ozone) %>%
+  na.omit()
+
+EPAairCorr <- cor(EPAair_working)
+corrplot(EPAairCorr, method = "ellipse")
+corrplot.mixed(EPAairCorr, upper = "ellipse") #one side shoes the values, the other the ellipse
 
 
 
 #Exercise 6: Choose a model by AIC in a Stepwise Algorithm. Do the results from AIC match the variables you selected on Exercise 5?
 
+TPAIC <- lm(data = EPAair, PM2.5 ~ Ozone + Year + Month +
+              meanLat + meanLng)
+step(TPAIC)
+#Apparently including, Month, meanLat, meanLng is important
 
+#No I was not going to select some of those
 
 
 #Exercise 7: Run another regression using the variables selected on Exercise 6. Compare r-squared value with the one from Exercise 5. 
 
+Exercise_7 <-lm(data = EPAair, PM2.5 ~ Ozone + Month +
+              meanLat + meanLng)
+summary(Exercise_7)
+
+#R-squared = 19.26% compared to the single lm which had an R-squared fo 13.14%
+#Apparently these 3 additional variables are crucial for understanding stuff
 ```
 
 
