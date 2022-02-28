@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -37,12 +37,12 @@ mytheme <- theme_classic(base_size = 14) +
 theme_set(mytheme)
 
 #Read Eno river data
-EnoDischarge <- read.csv("./Data/Processed/USGS_Site02085000_Flow_Processed.csv",
+EnoDischarge <- read.csv("../Data/Processed/USGS_Site02085000_Flow_Processed.csv",
                          stringsAsFactors = TRUE)
 EnoDischarge$datetime <- as.Date(EnoDischarge$datetime, format = "%Y-%m-%d")
 
 #Read wind speed data
-wind_data <- read.csv(file="./Data/Raw/Wind_Speed_PortArthurTX.csv",header=TRUE,
+wind_data <- read.csv(file="../Data/Raw/Wind_Speed_PortArthurTX.csv",header=TRUE,
                       stringsAsFactors = TRUE)
 wind_data$DATE <- ym(wind_data$DATE)
 
@@ -116,6 +116,7 @@ Note: time series objects must be equispaced. In our case, we have daily data wi
 
 ```{r}
 EnoDischarge.late_ts <- ts(EnoDischarge.late$discharge.mean, start = c(1985,1), frequency = 365)
+#notice the time series object only takes on column of data
 ```
 
 The `stl` function decomposes the time series object into its component parts. We must specify that the window for seasonal extraction is either "periodic" or a specific number of at least 7. The decomposition proceeds through a loess (locally estimated scatterplot smoothing) function.
@@ -123,17 +124,19 @@ The `stl` function decomposes the time series object into its component parts. W
 ```{r}
 ?stl
 # Generate the decomposition
-EnoDischarge.late_Decomposed <- stl(EnoDischarge.late_ts, s.window = "periodic")
+EnoDischarge.late_Decomposed <- stl(EnoDischarge.late_ts, s.window = "periodic") #I guess we chose a periodic seasonal extraction, we could have done weekly or something higher, I think we chose periodic because we're not sure of the time repitition
 
 # Visualize the decomposed series. 
 plot(EnoDischarge.late_Decomposed)
 
 # We can extract the components and turn them into data frames
-EnoDischarge.late_Components <- as.data.frame(EnoDischarge.late_Decomposed$time.series[,1:3])
+EnoDischarge.late_Components <- as.data.frame(EnoDischarge.late_Decomposed$time.series[,1:3]) #$time.series[,1:3] is how you call the 3 decomposed plots
+EnoDischarge.late_Components #this is the seasonal, trend, remainder columns 
 
 EnoDischarge.late_Components <- mutate(EnoDischarge.late_Components,
         Observed = EnoDischarge.late$discharge.mean,     
         Date = EnoDischarge.late$datetime)
+#ok we're adding in two components from the original data set, the observed value and the date
 
 # Visualize how the trend maps onto the data
 ggplot(EnoDischarge.late_Components) +
@@ -141,13 +144,16 @@ ggplot(EnoDischarge.late_Components) +
   geom_line(aes(y = trend, x = Date), color = "#c13d75ff") +
   geom_hline(yintercept = 0, lty = 2) +
   ylab(expression("Discharge (ft"^3*"/s)"))
+#heyyy we can see how the trend moves along with the whole data
 
 # Visualize how the seasonal cycle maps onto the data
 ggplot(EnoDischarge.late_Components) +
   geom_line(aes(y = Observed, x = Date),  size = 0.25) +
   geom_line(aes(y = seasonal, x = Date), color = "#c13d75ff") +
-  geom_hline(yintercept = 0, lty = 2) +
+  geom_hline(yintercept = 0, lty = 2) + #this line is designed to illustrate the seasonality is below 0 sometimes (the lty is the dotted line)
   ylab(expression("Discharge (ft"^3*"/s)"))
+#Aaand now we can see the seasonality put on top of the data observations
+#THIS is what she was talking about above - the seasonality goes intp the negative when we know that it should be bounded
 
 ```
 
@@ -156,7 +162,7 @@ Note that the decomposition can yield negative values when we apply a seasonal a
 
 ## Trend analysis
 
-Two types of trends may be present in our time series dataset: **monotonic/deterministic** or **stochastic**. Monotonic trends are a gradual shift over time that is consistent in direction, for example in response to land use change. 
+Two types of trends may be present in our time series dataset: **monotonic/deterministic** or **stochastic**. Monotonic trends are a gradual shift over time that is consistent in direction, for example in response to land use change. Stochastic means random.
 
 A third type of trend we haven't talked about is the **step** trend, also known as a level shift. Step trends are a distinct shift at a given time point, for example in response to a policy being enacted. 
 
@@ -184,7 +190,7 @@ summary(wind_data$AWND)
 # In real applications you will simply replace NAs
 wind_data_clean <- 
   wind_data %>% 
-  mutate( AWND.clean = zoo::na.approx(AWND) )
+  mutate( AWND.clean = zoo::na.approx(AWND) ) #zoo::na.approx(AWND)-this names the package you want to use to be specific (we also don't need to library the package), the zoo package and na.approx function does the linear interpolation (maybe ask Luana about this?)
 
 summary(wind_data_clean$AWND.clean)
 #Note the NA is gone
@@ -197,17 +203,19 @@ ggplot(wind_data_clean ) +
 
 ### Monotonic trend analysis, continued
 
-Specific tests for monotonic trend analysis are listed below, with assumptions and tips: 
+Specific tests for monotonic trend analysis are listed below, with assumptions and tips: (these functions determine if you ts set has a trend or is stationary, H0 is stationary for all of these tests)
 
 * **linear regression**: no seasonality, fits the assumptions of a parametric test. Function: `lm`
 * **Mann-Kendall**: no seasonality, non-parametric, missing data allowed. Function: `MannKendall()` (package: Kendall)
 * **Seasonal Mann-Kendall**: seasonality, non-parametric `SeasonalMannKendall` (package: Kendall)
-* **Spearman Rho**: no seasonality, non-parametric, missing data allowed. Function: `cor.test(method="spearman")` (package: stats)
+* **Spearman Rho**: no seasonality, non-parametric, missing data allowed. Function: `cor.test(method="spearman")` (package: stats) - the null is again: no monotonic relationship
 
 Specific test for stochastic trend analysis:
 
 * **Augmented Dickey Fuller**: no seasonality, non-parametric, missing data not allowed. Function: `adf.test()` (package: tseries)
+The null is that there is no stochastic trend
 
+WE WILL LIKELY USE THE PACKAGES ABOVE IN THE LAB/ASSIGNMENT
 
 #### Example: monotonic trend analysis
 
@@ -219,28 +227,34 @@ Note that wind speed has a seasonal cycle. We might be interested in knowing how
 ```{r}
 
 # Generate time series (trend test needs ts, not data.frame)
-f_month <- month(first(wind_data_clean$DATE))
-f_year <- year(first(wind_data_clean$DATE))
+f_month <- month(first(wind_data_clean$DATE)) #first() calls the first observation of the column
+f_year <- year(first(wind_data_clean$DATE)) #same thing, but first year not-first month
 wind_data_ts <- ts(wind_data_clean$AWND.clean,
-                   start=c(f_year,f_month),
-                   frequency=12) 
+                   start=c(f_year,f_month), #notice we use the f_month and f_year here to start off the time series 
+                   frequency=12) #12 = monthly data
 
 #decompose
 wind_data_decomp <- stl(wind_data_ts,s.window = "periodic")
 plot(wind_data_decomp)
+#we now know we have a seasonal data set
 
 # Run SMK test
 wind_data_trend1 <- Kendall::SeasonalMannKendall(wind_data_ts)
+#
 
 # Inspect results
 wind_data_trend1
 summary(wind_data_trend1)
+#the p-value of less than 0.05 
+#Hypothesis for the Mann-Kendall?
+#M0: the data is stationary
+#M1: the data is not stationary, there is a trend
 
-
-wind_data_trend2 <- trend::smk.test(wind_data_ts)
+wind_data_trend2 <- trend::smk.test(wind_data_ts) #this is another way to run the Mann-Kendall stationarity test (with a different package)
 # Inspect results
 wind_data_trend2
 summary(wind_data_trend2)
+#this test shows the breakdown of the effect each season has (as well as their respective statistical significance)
 
 #Visualization
 wind_data_plot <-
@@ -255,7 +269,7 @@ print(wind_data_plot)
 
 What would we conclude based on these findings? 
 
-> Answer:
+> Answer: WE definitely have a decreasing trend of average wind speed over time.
 
 
 ## Forecasting with Autoregressive and Moving Average Models (ARMA)
