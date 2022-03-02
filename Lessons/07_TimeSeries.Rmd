@@ -162,7 +162,7 @@ Note that the decomposition can yield negative values when we apply a seasonal a
 
 ## Trend analysis
 
-Two types of trends may be present in our time series dataset: **monotonic/deterministic** or **stochastic**. Monotonic trends are a gradual shift over time that is consistent in direction, for example in response to land use change. Stochastic means random.
+Two types of trends may be present in our time series dataset: **monotonic/deterministic** or **stochastic**. Monotonic trends are a gradual shift over time that is consistent in direction, constant over time, for example in response to land use change. Stochastic means random, the slope of the trend changes over time.
 
 A third type of trend we haven't talked about is the **step** trend, also known as a level shift. Step trends are a distinct shift at a given time point, for example in response to a policy being enacted. 
 
