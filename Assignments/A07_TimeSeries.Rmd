@@ -1,10 +1,10 @@
 ---
 title: "Assignment 7: Time Series Analysis"
-author: "Student Name"
+author: "Benjamin Culberson"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## OVERVIEW
@@ -29,6 +29,17 @@ The completed exercise is due on Monday, March 14 at 7:00 pm.
 
 ```{r}
 #1
+getwd()
+library(tidyverse)
+library(lubridate)
+library(zoo)
+library(trend)
+
+mytheme <- theme_classic(base_size = 14) +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "right")
+
+theme_set(mytheme)
 
 ```
 
@@ -37,8 +48,50 @@ The completed exercise is due on Monday, March 14 at 7:00 pm.
 
 ```{r, message = FALSE}
 #2
+EPAair2010 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2010_raw.csv", 
+           stringsAsFactors = TRUE)
 
+EPAair2011 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2011_raw.csv", 
+           stringsAsFactors = TRUE)
 
+EPAair2012 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2012_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2013 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2013_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2014 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2014_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2015 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2015_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2016 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2016_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2017 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2017_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2018 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2018_raw.csv", 
+           stringsAsFactors = TRUE)
+
+EPAair2019 <- 
+  read.csv("../Data/Raw/Ozone_TimeSeries/EPAair_O3_GaringerNC2019_raw.csv", 
+           stringsAsFactors = TRUE)
+
+GaringerOzone <- rbind(EPAair2010, EPAair2011, EPAair2012, EPAair2013, EPAair2014, 
+                       EPAair2015, EPAair2016, EPAair2017, EPAair2018, EPAair2019)
+
+summary(GaringerOzone)
 ```
 
 ## Wrangle
@@ -53,12 +106,21 @@ The completed exercise is due on Monday, March 14 at 7:00 pm.
 
 ```{r}
 # 3
+GaringerOzone$Date <- as.Date(GaringerOzone$Date, format = "%m/%d/%Y")
 
 # 4
+GaringerOzone_processed <- GaringerOzone %>%
+  select(Date, Daily.Max.8.hour.Ozone.Concentration, DAILY_AQI_VALUE)
 
 # 5
+Days <- as.data.frame(seq(as.Date("2010-01-01"), as.Date("2019-12-31"), by="days"))
+
+Days$Date <- Days$`seq(as.Date("2010-01-01"), as.Date("2019-12-31"), by = "days")`
+Days <- Days %>%
+  select(Date)
 
 # 6
+GaringerOzone <- left_join(Days, GaringerOzone_processed)
 
 ```
 
@@ -68,10 +130,14 @@ The completed exercise is due on Monday, March 14 at 7:00 pm.
 
 ```{r}
 #7
+ggplot(GaringerOzone, aes(x = Date, y = Daily.Max.8.hour.Ozone.Concentration)) +
+  geom_line() +
+  geom_smooth( method = lm ) +
+  labs(x = "Date", y = "PPM", title = "Ozone Concentration")
 
 ```
 
->Answer: 
+>Answer: It certainly appears that there is seasonality in the data. There appears to be a small trend, but it somewhat hard to tell given all the noise, but looking at the graph with the trend line, there does appear to be a slight downward progression.
 
 ## Time Series Analysis
 
@@ -81,17 +147,48 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #8
+summary(GaringerOzone)
+
+GaringerOzone <- 
+  GaringerOzone %>% 
+  mutate(Daily.Max.8.hour.Ozone.Concentration.clean = 
+           zoo::na.approx(Daily.Max.8.hour.Ozone.Concentration)) %>%
+  mutate(DAILY_AQI_VALUE.clean = zoo::na.approx(DAILY_AQI_VALUE))
+  
+
+GaringerOzone <- 
+  GaringerOzone %>%
+  select(Date, Daily.Max.8.hour.Ozone.Concentration.clean, DAILY_AQI_VALUE.clean)
+
+summary(GaringerOzone)
 
 ```
 
-> Answer:  
+> Answer:  The reason we didn't use a piecewise constant or a spline interpolation is because they would most likey be inaccurate. The data is rather fluid so the piecwise constant will almost certainly not reflect the most accurate estimate of ppm or AQI for the NAs. Furthermore, the spline interolation would use a quadratic function to bridge the gap between two points. A cursory glance at the data does not lend itself to the belief that the data behaves in a quadratic manner. Simply, if one were to take 3 random sequential points, a linear interpolation consistently looks like the best way to estimate the middle value. The spline interpolation isn't necessarily wrong in all cases, but it appears that it would be mostly inaccurate.
 
 
 9. Create a new data frame called `GaringerOzone.monthly` that contains aggregated data: mean ozone concentrations for each month. In your pipe, you will need to first add columns for year and month to form the groupings. In a separate line of code, create a new Date column with each month-year combination being set as the first day of the month (this is for graphing purposes only)
 
 ```{r}
 #9
+GaringerOzone.monthly <- 
+  GaringerOzone %>%
+  mutate(Month = month(Date)) %>%
+  mutate(Year = year(Date)) %>%
+  group_by(Year, Month) %>%
+  summarise(Ozone_mean = mean(Daily.Max.8.hour.Ozone.Concentration.clean))
 
+GaringerOzone.monthly
+
+GaringerOzone.monthly <-
+  GaringerOzone.monthly
+
+Months <- as.data.frame(seq(as.Date("2010-01-01"), as.Date("2019-12-1"), by = "months"))
+Months$Date <- Months$`seq(as.Date("2010-01-01"), as.Date("2019-12-1"), by = "months")`
+Months <- Months %>%
+  select(Date)
+
+GaringerOzone.monthly <- cbind(GaringerOzone.monthly, Months)
 ```
 
 
@@ -99,8 +196,16 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #10
+f_day_ozone <- day(first(GaringerOzone$Date))
+f_month_ozone <- month(first(GaringerOzone.monthly$Date)) 
+f_year_ozone <- year(first(GaringerOzone.monthly$Date)) 
 
+GaringerOzone.daily.ts <- ts(GaringerOzone$Daily.Max.8.hour.Ozone.Concentration.clean, 
+                   start=c(f_year_ozone,f_month_ozone,f_day_ozone), 
+                   frequency=365)
 
+GaringerOzone.monthly.ts <- ts(GaringerOzone.monthly$Ozone_mean, 
+                               start = c(f_year_ozone,f_month_ozone), frequency = 12)
 ```
 
 
@@ -108,7 +213,11 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #11
+daily_Ozone_decomp <- stl(GaringerOzone.daily.ts,s.window = "periodic") 
+plot(daily_Ozone_decomp)
 
+monthly_Ozone_decomp <- stl(GaringerOzone.monthly.ts,s.window = "periodic") 
+plot(monthly_Ozone_decomp)
 
 ```
 
@@ -117,25 +226,30 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #12
+monthly_trend <- Kendall::SeasonalMannKendall(GaringerOzone.monthly.ts)
 
-
+monthly_trend
+summary(monthly_trend)
 
 ```
 
-> Answer:  
+> Answer:  THe seasonal Mann-Kendall stationarity test is most appropriate in this case because the decomposition of the monthly time series Ozone object clearly shows a seasonal component. If we ran a non-seasonal Mann-Kendall test, we may find there to be a trend with higher statistical significance than there really is, or no trend at all when there is one. After running the seasonal Mann-kendall, it does appear that the test has found there to be a statistically significant trend.
 
 13. Create a plot depicting mean monthly ozone concentrations over time, with both a geom_point and a geom_line layer. Edit your axis labels accordingly.
 
 ```{r}
 # 13
-
+ggplot(GaringerOzone.monthly) +
+  geom_line(aes(y = Ozone_mean, x = Date),  size = 0.25) +
+  geom_point(aes(y= Ozone_mean, x = Date)) +
+  labs(y = "Parts Per Millions", x = "Date", title = "Ozone Concentration" )
 
 
 ```
 
 14. To accompany your graph, summarize your results in context of the research question. Include output from the statistical test in parentheses at the end of your sentence. Feel free to use multiple sentences in your interpretation.
 
-> Answer: 
+> Answer: We are interested in determining whether or not there is a trend in our Ozone Concentration Data over time. From this graph here, it certainly appears that there is significant seasonality, but whether or not a trend exists is unclear (it's hard to judge). However, after running a seasonal Mann-Kendall test we reject the null hypothesis of no statistically significant trend at the 0.05 level (p -value = 0.046724)
 
 15. Subtract the seasonal component from the `GaringerOzone.monthly.ts`. Hint: Look at how we extracted the series components for the EnoDischarge on the lesson Rmd file.
 
@@ -143,9 +257,18 @@ Study question: Have ozone concentrations changed over the 2010s at this station
 
 ```{r}
 #15
+ozone_components <- as.data.frame(monthly_Ozone_decomp$time.series[,1:3])
+ozone_components
+
+monthly_ozone_deseasoned_ts <- GaringerOzone.monthly.ts - ozone_components$seasonal
 
 #16
+monthly_trend2 <- Kendall::MannKendall(monthly_ozone_deseasoned_ts)
+
+monthly_trend2
+summary(monthly_trend2)
+
 
 ```
 
-> Answer: 
+> Answer: After deseasoning the Ozone Monthly Series and running a non-seasonal Mann-Kendall test, we find a statistically significant trend as well. This test actually rejects the null hypothesis of stationarity with much higher confidence as well (p-value = 0.00754)

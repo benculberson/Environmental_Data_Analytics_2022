@@ -153,7 +153,7 @@ ggplot(EnoDischarge.late_Components) +
   geom_hline(yintercept = 0, lty = 2) + #this line is designed to illustrate the seasonality is below 0 sometimes (the lty is the dotted line)
   ylab(expression("Discharge (ft"^3*"/s)"))
 #Aaand now we can see the seasonality put on top of the data observations
-#THIS is what she was talking about above - the seasonality goes intp the negative when we know that it should be bounded
+#THIS is what she was talking about above - the seasonality goes into the negative when we know that it should be bounded
 
 ```
 
