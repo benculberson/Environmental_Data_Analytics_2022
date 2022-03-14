@@ -4,7 +4,7 @@ author: "Environmental Data Analytics | John Fay & Luana Lima"
 date: "Spring 2022"
 output: pdf_document
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 # 1. INTRODUCTION
@@ -59,19 +59,19 @@ First, we'll read in our EPA air quality sites, as we did in the previous exerci
 
 ```{r convert.tabular.data.to.sf.object}
 #Read our EPA points into a spatial dataframe
-epa_pm25_sites_sf <- read_csv('./Data/Raw/EPAair_PM25_NC2018_raw.csv') %>% 
+epa_pm25_sites_sf <- read_csv('../Data/Raw/EPAair_PM25_NC2018_raw.csv') %>% 
   group_by(`Site Name`, COUNTY, SITE_LATITUDE, SITE_LONGITUDE) %>% 
   summarize(
-    meanPM = mean(`Daily Mean PM2.5 Concentration`,na.rm=T),
+    meanPM = mean(`Daily Mean PM2.5 Concentration`,na.rm=T), #remember, we're grouping by the above things and getting their means (he describes it as collapsing it by site)
     maxPM = max(`Daily Mean PM2.5 Concentration`,na.rm=T)
     ) %>% 
-  st_as_sf(coords = c('SITE_LONGITUDE','SITE_LATITUDE'), crs=4269)
+  st_as_sf(coords = c('SITE_LONGITUDE','SITE_LATITUDE'), crs=4269) #this creates the spatial dataframe (spatial features objects)
 
 #Inspect the object
 class(epa_pm25_sites_sf)
 
 #What is its CRS again?
-st_crs(epa_pm25_sites_sf)$epsg
+st_crs(epa_pm25_sites_sf)$epsg #this calls the epsg CRS value
 
 #Plot the data
 ggplot(data=epa_pm25_sites_sf) +
@@ -88,7 +88,7 @@ Below we read in the USA counties shapefile, filtering for just the NC features 
 
 ```{r read.filtered.records.from.shapefile.to.sf.object}
 #
-counties_sf<- st_read('./Data/Spatial/cb_2018_us_county_20m.shp') %>% 
+counties_sf<- st_read('../Data/Spatial/cb_2018_us_county_20m.shp') %>% 
   filter(STATEFP == 37) #Filter for just NC Counties
 
 #
@@ -108,7 +108,7 @@ st_bbox(counties_sf)
 head(counties_sf)
 
 #Plot the data, colored by area of land in each county
-mapView(counties_sf, zcol = "AWATER")
+mapView(counties_sf, zcol = "ALAND") #changing the attribute ot say AWATER Yields a different map
 ```
 
 ### 2.2.2 Read in and explore 8-digit HUC watersheds for NC
@@ -117,19 +117,22 @@ mapView(counties_sf, zcol = "AWATER")
 
 ```{r read HUCs shapefile}
 #Read the shapefile into an sf dataframe named "huc8_sf"
-
+huc8_sf<- st_read('../Data/Spatial/NCHUC8.shp') 
 
 #Reveal the columns
-
+colnames(huc8_sf)
 
 #Check the CRS
-
+#
+st_crs(huc8_sf)
 
 #Examine some records
-
-
+#
+nrow(huc8_sf)
+st_bbox(huc8_sf)
+head(huc8_sf)
 #View the data as a map, colored by the acreage in each
-
+mapView(huc8_sf, zcol = "ACRES")
 
 ```
 
@@ -139,12 +142,13 @@ mapView(counties_sf, zcol = "AWATER")
 
 ```{r Select the Upper Neuse HUC 8}
 #Read the shapefile into an sf dataframe
-
-
+upperNeuse_sf <- st_read('../Data/Spatial/NCHUC8.shp') %>%
+  filter(SUBBASIN =='Upper Neuse')
 
 #Create a map
-
-
+#mapview(huc8_sf, col.regions = 'orange') + 
+#  mapview(upperNeuse_sf, col.regions == 'purple')
+#couldn't quite do it
 ```
 
 ### 2.2.4 Reading in GeoJSON data
@@ -167,7 +171,7 @@ colnames(powerplants_sf)
 nrow(powerplants_sf)
 
 #View on a map - specify the geometry column to draw faster
-plot(powerplants_sf$geometry)
+mapview(powerplants_sf$geometry)
 
 #Filter for just powerplants found in NC
 nc_powerplants_sf <- powerplants_sf %>% 
@@ -185,6 +189,8 @@ nc_powerplants_sf <- nc_powerplants_sf %>%
 # Examine counts by fuel type
 ggplot(nc_powerplants_sf) + 
   geom_sf(aes(color = PRIM_FUEL)) 
+
+mapview(nc_powerplants_sf)
 ```
 
 # 3. WORKING WITH SPATIAL DATA
@@ -205,7 +211,7 @@ We'll focus on just a few variables: Estimates of people in poverty ("E_POV") an
 #Read the 2018 SVI county-level dataset for NC
 svi2018_nc_raw <- read.csv(
   'https://svi.cdc.gov/Documents/Data/2018_SVI_Data/CSV/States_Counties/NorthCarolina_COUNTY.csv',
-  colClasses = c('FIPS' = 'factor')) %>% 
+  colClasses = c('FIPS' = 'factor')) %>% #FIPS is number but we're looking at it as a factor, if we brought them in as numbers, when we combined the STATEFP and the COUNTYFP, the resulting number would'nt make sense, we need to keep that 0 in there
   select(COUNTY, FIPS, LOCATION, E_TOTPOP, E_POV, E_MINRTY)
 
 #Check structure
@@ -217,7 +223,7 @@ counties_sf_join <-  merge(x = counties_sf,
                            by.x = "GEOID", 
                            by.y = "FIPS" )
 
-#Tidyverse version of the join
+#Tidyverse version of the join, same thing as above but using the tidyverse package
 counties_sf_join <- counties_sf %>% 
   left_join(svi2018_nc_raw, by = c("GEOID" = "FIPS") )
 
@@ -239,17 +245,22 @@ ggplot() +
 
 ```{r}
 #Compute HUC8 wind energy
-
+wind_energy_huc8 <- read.csv('https://raw.githubusercontent.com/ENV859/EnviroAtlasData/main/Wind_Energy.csv', colClasses = c('HUC_12' = 'factor')) %>%
+  mutate(HUC_8 = substr(HUC_12,1,8)) %>%
+  group_by(HUC_8) %>%
+  summarize(kWhkm2day = sum(kWhkm2day))
 
 
 
 #Join to HUC_8 features
-
-
-
+huc8_sf_wind <- merge(x = huc8_sf,
+                      y = wind_energy_huc8,
+                      by.x = "HUC_8",
+                      by.y = "HUC_8")
 
 #View the outputs
-
+mapview(huc8_sf_wind,
+        zcol = "kWhkm2day")
 
 
 ```
@@ -265,6 +276,8 @@ In our case, all of our county features share the same "STATEFP" value, so we'll
 state_sf <- counties_sf %>% 
   group_by('STATEFP') %>% 
   summarize(ALAND = sum(ALAND))
+
+#so basically, we grouped by country, then summed them into a single state
 
 #View the data
 mapview(state_sf)
@@ -310,7 +323,7 @@ On top of projecting any geographic data to adjust for the limitations of the so
 
 ```{r Transform the datasets to other coordinate reference systems}
 #Convert all to UTM Zone 17 (crs = 26917)
-epa_sf_utm <-      st_transform(epa_pm25_sites_sf, crs = 26917)
+epa_sf_utm <-      st_transform(epa_pm25_sites_sf, crs = 26917) 
 counties_sf_utm <- st_transform(counties_sf, crs = 26917)
 state_sf_utm <-    st_transform(state_sf,crs = 26917)
 huc8_sf_utm <-     st_transform(huc8_sf, crs = 26917)
@@ -468,7 +481,7 @@ mapView(counties_sf[resultMask,])
 
 # 4. VISUALIZATION
 
-Lastly, let's take a deeper dive into the various ways to visualize our spatial data. We've done a bit of this already, but let's formalize and expand what we've covered. You can take these visualizations much further than what we are presenting here, but these should reveal the basic strucutre and a few "gotchas" when constructing these plots.
+Lastly, let's take a deeper dive into the various ways to visualize our spatial data. We've done a bit of this already, but let's formalize and expand what we've covered. You can take these visualizations much further than what we are presenting here, but these should reveal the basic structure and a few "gotchas" when constructing these plots.
 
 ## 4.1 Visualizing Multiple Datasets with `ggplot`
 

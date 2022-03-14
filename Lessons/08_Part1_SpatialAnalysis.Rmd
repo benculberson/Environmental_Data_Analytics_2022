@@ -4,7 +4,7 @@ author: "Environmental Data Analytics | John Fay & Luana Lima"
 date: "Spring 2022"
 output: pdf_document
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 # 1. INTRODUCTION
@@ -74,7 +74,7 @@ Let's read some geospatial data into our coding environment. The file we'll read
 
 ```{r Read in road data}
 #Read a spatial dataset
-GasPlants <- st_read('https://opendata.arcgis.com/datasets/a0722062315143a7980cebb79a204781_4.geojson')
+GasPlants <- st_read('https://opendata.arcgis.com/datasets/a0722062315143a7980cebb79a204781_4.geojson') #st_read is the equivalent as read csv
 #Alternative
 #GasPlants <- st_read('./Data/Spatial/Manufactured_Gas_Plant_Sites.geojson')
 
@@ -84,13 +84,13 @@ names(GasPlants)
 str(GasPlants$geometry)
 
 #View using sf plot
-plot(GasPlants['STATUS'],pch=16)
+plot(GasPlants['STATUS'],pch=16) #status is either active or inactive 
 
 #View using ggplot
 ggplot(data=GasPlants) + geom_sf()
 
 #View using mapview
-mapview(GasPlants)
+mapview(GasPlants) #so cool, you can see the NC overlay
 
 ```
 
@@ -100,14 +100,14 @@ mapview(GasPlants)
 ```{r Create a spatial dataframe from coordinate data}
 
 #Read in our processed EPA Air dataset, setting the Date column to be dates
-EPAair <- read.csv("./Data/Processed/EPAair_O3_PM25_NC2021_Processed.csv", stringsAsFactors = TRUE) %>% 
+EPAair <- read.csv("../Data/Processed/EPAair_O3_PM25_NC2021_Processed.csv", stringsAsFactors = TRUE) %>% 
   mutate(Date = ymd(Date))
 
 #Wrangle so each site has only one record, computing mean ozone and PM2.5 at that site
 EPAair.sites <- EPAair %>% 
   group_by(Site.Name, COUNTY, SITE_LATITUDE, SITE_LONGITUDE) %>% 
   summarize(
-    mean_Ozone = mean(Ozone, na.rm=T),    #What does "na.rm=T" do? Is it necessary?
+    mean_Ozone = mean(Ozone, na.rm=T),    #What does "na.rm=T" do? Is it necessary? I think T means True, I don't think it's necessary because the mean is just going to ignore them
     mean_PM25 = mean(PM2.5, na.rm=T),
     count_all = n(),
     count_Ozone = sum(!is.na(Ozone)),
@@ -115,8 +115,8 @@ EPAair.sites <- EPAair %>%
 
 #Convert to a spatial dataframe
 EPAair.sf <- EPAair.sites %>% 
-  st_as_sf(coords = c('SITE_LONGITUDE','SITE_LATITUDE'),
-           crs=4326)
+  st_as_sf(coords = c('SITE_LONGITUDE','SITE_LATITUDE'), #note that long = x, and y = lat.
+           crs=4326) #create the simple feature data frame
 
 #View the data using the methods above...
 
@@ -131,14 +131,14 @@ class(sfg_GraingerHall)
 mapview(sfg_GraingerHall)
 
 #Upgrade to a simple feature geometry column by adding a crs 
-sfc_GraingerHall <- st_sfc(sfg_GraingerHall,crs=4326)
+sfc_GraingerHall <- st_sfc(sfg_GraingerHall,crs=4326) # i guess the crs puts it on a map, this is sort of a better data frame
 class(sfc_GraingerHall)
 mapview(sfc_GraingerHall)
 
 #Upgrade to a spatial dataframe
 sf_GraingerHall <- st_as_sf(sfc_GraingerHall)
 sf_GraingerHall$Name = 'Grainger Hall'
-mapview(sf_GraingerHall)
+mapview(sf_GraingerHall) #same view, now a spatial dataframe, this is the superior of the 3 dfs
 
 ```
 
@@ -149,6 +149,8 @@ So, we see that our "sf" dataframe works much like our familiar dataframe, only 
 
 # 3. COORDINATE REFERENCE SYSTEMS
 Each of the above datasets we explored use lat/long coordinates in defining their geometries. We actually specify that these use lat/long coordinate when creating them via the `crs = 4326` parameter you see in the examples. But what is "4326"?? And what is the significance of this? 
+
+European Petroleum Survey Group database point
 
 Let's explore:
 
@@ -187,7 +189,7 @@ The "4326" in the `crs = 4326` is an EPSG code, a number used to look up a speci
 
 The website <http://spatialreference.org/> lists hundreds of standard CRS along with a map and description of where it's appropriate. For example, a useful one in North Carolina is [UTM Zone 17N-NAD 83](http://spatialreference.org/ref/epsg/nad83-utm-zone-17n/). Note also that its *EPSG code* is `26917`; this EPSG code one way we can assign a CRS to our data. If you click on the the "Well Known Text as HTML" link, it will reveal all the specific associated with that CRS... (Another site listing coordinate reference systems is <http://www.epsg.org/>)
 
-Some CRS, however, do not have an associated EPSG code, and for those, we can use the "proj4string", which is a long hand form of the projection information. Just to make it more confusing, some coordinate systems have a "WKT" or "Well known text" code.Mostly, these are all interchangeable and the important bit here is that you understand the need for and requirements of associating a CRS with a spatial dataset. I found this site gives a useful overview of the nuances of coordinate systems: <https://bit.ly/2XUGMyX>
+Some CRS, however, do not have an associated EPSG code, and for those, we can use the "proj4string", which is a long hand form of the projection information. Just to make it more confusing, some coordinate systems have a "WKT" or "Well known text" code. Mostly, these are all interchangeable and the important bit here is that you understand the need for and requirements of associating a CRS with a spatial dataset. I found this site gives a useful overview of the nuances of coordinate systems: <https://bit.ly/2XUGMyX>
 
 ### 3.2.1 Some commonly used CRS
 
@@ -223,6 +225,7 @@ Say we want to the distance between our EPA sites and the nearest Gas Plant. We 
 
 
 ```{r Transform the dataset}
+#THis takes the difference between the two and converts it from degrees (Lat. Long coordinates to meters)
 #Transform the datasets to use UTM 17 N, WGS84
 EPAair.sf.utm <- st_transform(EPAair.sf,32617)
 GasPlants.utm <- st_transform(GasPlants,32617)
@@ -245,7 +248,7 @@ mean_distances <-  rowMeans(distance_matrix)
 EPAair.sf.utm  <-  EPAair.sf.utm %>% 
   bind_cols(mean_distances)
 
-
+EPAair.sf.utm 
 
 ```
 

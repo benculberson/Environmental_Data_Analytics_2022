@@ -4,7 +4,7 @@ author: "Environmental Data Analytics | John Fay & Luana Lima"
 date: "Spring 2022"
 output: pdf_document
 editor_options:
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -29,7 +29,7 @@ editor_options:
 ```{r setup}
 #Examine the working directory
 getwd()
-
+install.packages('Rcpp')
 #Import libraries
 library(tidyverse)
 library(sf)
