@@ -108,7 +108,7 @@ st_bbox(counties_sf)
 head(counties_sf)
 
 #Plot the data, colored by area of land in each county
-mapView(counties_sf, zcol = "ALAND") #changing the attribute ot say AWATER Yields a different map
+mapView(counties_sf, zcol = "ALAND") #changing the attribute to say AWATER Yields a different map
 ```
 
 ### 2.2.2 Read in and explore 8-digit HUC watersheds for NC
