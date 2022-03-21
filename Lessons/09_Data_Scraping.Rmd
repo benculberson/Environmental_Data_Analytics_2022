@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -169,7 +169,7 @@ This begins by setting the parameters of the page we'll be scraping to variables
 ```{r streamline.the.process}
 #Construct the scraping web address, i.e. its URL
 the_base_url <- 'https://www.ncwater.org/WUDC/app/WWATR/report/view'
-the_facility <- '0004-0001'
+the_facility <- '0218-0238'
 the_year <- 2015
 the_scrape_url <- paste0(the_base_url, '/', the_facility, '/', the_year)
 print(the_scrape_url)
@@ -263,7 +263,7 @@ view(the_df)
 R can iterate using either "lapply" or Purrrs' "map" functions. 
 ```{r scrape.multiple.years.of.data}
 #Set the inputs to scrape years 2015 to 2020 for the site "0004-0001"
-the_years = rep(2018:2020)
+the_years = rep(2015:2020)
 my_facility = '0004-0001'
 
 #Use lapply to apply the scrape function
