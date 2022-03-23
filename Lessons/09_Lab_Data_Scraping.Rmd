@@ -5,7 +5,7 @@ date: "Spring 2022"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 ## Objectives
@@ -53,6 +53,9 @@ theme_set(mytheme)
  - The name of the service on that server that will process the request
  - The parameters of the service
  > Can you identify these components in the Google search request? 
+ Address of the server: www.google.com
+ Service Name: search
+ Parameters: q = NSOE
  
 * Responses are sent as text files, which are interpreted by a browser
  - Written in HTML: Tags (w/attributes) & Values, which browsers can interpret
@@ -74,7 +77,9 @@ theme_set(mytheme)
 You should be presented with a page of the latest water flow data for the Neuse River near Clayton, NC.If you had issues, a shortened link is here: <https://on.doi.gov/3ewCMPP>. 
 
 Have a look at the link (not the shortened one) and you'll see that it has the RESTful format. We can easily edit the URL to fetch data for another site: 
-* In the URL replace `02087500` with `02085070` and re-submit. What site's data do we have now? Saved a lot of clicks in getting to this dataset, didn't we? 
+* In the URL replace `02087500` with `02085070` and re-submit. What site's data do we have now? Saved a lot of clicks in getting to this dataset, didn't we?
+
+We used to have Neuse River Site Near Clayton, now we have Eno River Near Durham, NC
 
 The power in this is that we aren't limited to sending requests and handling responses in a browser; we can do this via scripts in R. If the data we are retrieving is a simple text file, as it is here, we don't even need any special packages, though we do need to do a bit of wrangling to skip header lines...
 
@@ -83,9 +88,11 @@ The power in this is that we aren't limited to sending requests and handling res
 ```{r pull.and.plot.discharge.data}
 #Set the URL
 theURL <- 'https://waterdata.usgs.gov/nwis/uv?search_site_no=02087500&period=7&format=rdb'
+#we've set the site number, the period, and the format we want to save our data in the URL above
 
 #Get the data, which starts on line 30
-gage_data <- read.table(theURL,skip = 29,header=TRUE,sep='\t') 
+gage_data <- read.table(theURL,skip = 28,header=TRUE,sep='\t') 
+#There are 28 header lines in this above URL so we'll skip them (we did have to count them), there is a header on the columns so we'll skip them too, and then the data is separated by tabs
 
 #Update the column headers
 colnames(gage_data) = c("agency_cd", "site_no", "datetime", "tz_cd",
@@ -94,6 +101,7 @@ colnames(gage_data) = c("agency_cd", "site_no", "datetime", "tz_cd",
 gage_data <- gage_data %>% 
   select(datetime, discharge_cfs,gage_ht_ft) %>% 
   mutate(datetime = ymd_hm(datetime))
+#we now have the scraped data tidied up for our purposes
 
 #Plot
 ggplot(gage_data,aes(x=datetime,y=discharge_cfs)) + 
@@ -103,6 +111,31 @@ ggplot(gage_data,aes(x=datetime,y=discharge_cfs)) +
 
 ### Exercise: 
 > Alter the above code so that it plots the last 24 days of flow for gage 02085070
+
+```{r pull.and.plot.discharge.data}
+#Set the URL
+theURL <- 'https://waterdata.usgs.gov/nwis/uv?search_site_no=02085070&period=24&format=rdb'
+#we've set the site number, the period, and the format we want to save our data in the URL above
+#to do the exercise, note that I just changed the site_no and the period 
+
+#Get the data, which starts on line 3
+gage_data <- read.table(theURL,skip = 28,header=TRUE,sep='\t') 
+#There are 28 header lines in this above URL so we'll skip them (we did have to count them), there is a header on the columns so we'll skip them too, and then the data is separated by tabs
+
+#Update the column headers
+colnames(gage_data) = c("agency_cd", "site_no", "datetime", "tz_cd",
+                        "discharge_cfs", "89192_00060_cd", "gage_ht_ft", "89193_00065_cd")
+#Tidy the data
+gage_data <- gage_data %>% 
+  select(datetime, discharge_cfs,gage_ht_ft) %>% 
+  mutate(datetime = ymd_hm(datetime))
+#we now have the scraped data tidied up for our purposes
+
+#Plot
+ggplot(gage_data,aes(x=datetime,y=discharge_cfs)) + 
+  geom_line() +
+  labs(x = "Date",y = "Discharge (cfs)")
+```
 
 ## APIs
 
@@ -120,10 +153,10 @@ And with the formalization of APIs, more R packages are being written to streaml
 siteNo <- '02087500' 
 
 #Identify parameter of interest: 
-pcode = '00060' #discharge (cfs)
+pcode = '00060' #discharge (cfs) <- this code gets us cubic feet per second
 
 #Identify statistic code for daily values: 
-scode = "00003"  #mean
+scode = "00003"  #mean, that's what this code gets us
 
 #Identify start and end dates
 start.date = "1930-10-01"
@@ -162,7 +195,7 @@ You'll also need to look up the IDs of the variables you want to extract. Those 
 
 ```{r}
 #Apply the API key
-#census_api_key("d4ad7874c996c7a83fec0a81466309ddc07d8e22a", install = TRUE)
+#census_api_key("91573873ef61ecb717d7ee21c60d0ca8aed3807b", install = TRUE)
 
 nc_pop <- 
   get_acs(geography = "county",
@@ -203,42 +236,59 @@ The RVest scraping workflow is as follows:
 
 ```{r eval=FALSE}
 #1 Link to the web site using read_html
-the_website
+the_website <- read_html('https://www.eia.gov/electricity/state/')
 
 #2&3 Locate elements and read their text attributes into variables
-the_states <- 
-the_price <- 
-the_capacity <- 
-net_generation <- 
-total_retail <- 
+the_states <- the_website %>% html_nodes('.basic_table a') %>% html_text
+the_price <- the_website %>% html_nodes('td:nth-child(2)') %>% html_text
+the_capacity <- the_website %>% html_nodes('td:nth-child(3)') %>% html_text
+net_generation <- the_website %>% html_nodes('td:nth-child(4)') %>% html_text
+total_retail <- the_website %>% html_nodes('td:nth-child(5)') %>% html_text
   
 #3 Construct a dataframe from the values
+my_df <-data.frame(
+  "State" = the_states,
+  "Price" = as.numeric(the_price),
+  "Capacity" = as.numeric(gsub(",","",the_capacity)),
+  "Generation" = as.numeric(gsub(",","",net_generation)),
+  "Retail Value" = as.numeric(gsub(",","",total_retail)),
+  year = 2019
+)
 ```
 
 
 ```{r create.scrape.function}
 scrape.it <- function(the_year){
   #Get the proper url
-  the_url <- ifelse(the_year==2019,
+  the_url <- ifelse(the_year==2020,
                     'https://www.eia.gov/electricity/state/',
-                    paste('https://www.eia.gov/electricity/state/archive',the_year,'/'))
+                    paste('https://www.eia.gov/electricity/state/archive/',the_year,'/'))
 
-  #Fetch the website
-  #<enter code from above here> 
+  #1 Link to the web site using read_html
+  the_website <- read_html(the_url)
   
-  #Scrape the data
-  #<enter code from above here>
-  
-  #Convert to dataframe
-  #<enter code from above here>
-  
-  #Return the dataframe
-  return(the_df)
+  #2&3 Locate elements and read their text attributes into variables
+  the_states <- the_website %>% html_nodes('.basic_table a') %>% html_text
+  the_price <- the_website %>% html_nodes('td:nth-child(2)') %>% html_text
+  the_capacity <- the_website %>% html_nodes('td:nth-child(3)') %>% html_text
+  net_generation <- the_website %>% html_nodes('td:nth-child(4)') %>% html_text
+  total_retail <- the_website %>% html_nodes('td:nth-child(5)') %>% html_text
+    
+  #3 Construct a dataframe from the values
+  my_df <-data.frame(
+    "State" = the_states,
+    "Price" = as.numeric(the_price),
+    "Capacity" = as.numeric(gsub(",","",the_capacity)), #the gsub function handles the comma in the character 
+    "Generation" = as.numeric(gsub(",","",net_generation)),
+    "Retail Value" = as.numeric(gsub(",","",total_retail)),
+    year = the_year
+  )
+  return(my_df)
 }
 
 
 # Use the above function to scrape data for 2017
-
+scrape.it(2017)
 
 # Map the function to scrape data from 2017 to 2020
 
