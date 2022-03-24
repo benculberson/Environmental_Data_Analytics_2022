@@ -1,10 +1,10 @@
 ---
 title: "Assignment 09: Data Scraping"
-author: "Student Name"
+author: "Benjamin Culberson"
 output: pdf_document
 geometry: margin=2.54cm
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
 # Total points:
@@ -30,13 +30,19 @@ This exercise accompanies the lessons in Environmental Data Analytics on data sc
 
 ```{r, message = FALSE}
 #1
+library(tidyverse)
+library(rvest)
+library(lubridate)
 
-
+mytheme <- theme_classic() +
+  theme(axis.text = element_text(color = "black"), 
+        legend.position = "top")
+theme_set(mytheme)
 ```
 
-2. We will be scraping data from the NC DEQs Local Water Supply Planning website, specifically the Durham's 2019 Municipal Local Water Supply Plan (LWSP): 
+2. We will be scraping data from the NC DEQs Local Water Supply Planning website, specifically the Durham's 2020 Municipal Local Water Supply Plan (LWSP): 
  * Navigate to https://www.ncwater.org/WUDC/app/LWSP/search.php
- * Change the date from 2020 to 2019 in the upper right corner.
+ * Change the date from to 2020 in the upper right corner.
  * Scroll down and select the LWSP link next to Durham Municipality. 
  * Note the web address: <https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2020>
 
@@ -45,7 +51,7 @@ Indicate this website as the as the URL to be scraped. (In other words, read the
 
 ```{r set.the.scraping.website}
 #2
-
+water_webpage <- read_html('https://www.ncwater.org/WUDC/app/LWSP/report.php?pwsid=03-32-010&year=2020')
 
 ```
 
@@ -57,7 +63,7 @@ Indicate this website as the as the URL to be scraped. (In other words, read the
  * Ownership
  
 * From the "3. Water Supply Sources" section:
- * Average Daily Use (MGD) - for each month
+ * Maximum Daily Use (MGD) - for each month
 
 In the code chunk below scrape these values, assigning them to three separate variables.
 
@@ -65,10 +71,12 @@ In the code chunk below scrape these values, assigning them to three separate va
 
 ```{r scrape.the.data}
 #3
-water.system.name <- 
-pswid <- 
-ownership <- 
-max.withdrawals.mgd <- 
+water.system.name <- water_webpage %>% html_nodes('td tr:nth-child(1) td:nth-child(2)') %>% html_text
+water.system.name <- water.system.name[1]
+pswid <- water_webpage %>% html_nodes('td tr:nth-child(1) td:nth-child(5)') %>% html_text
+ownership <- water_webpage %>% html_nodes('tr:nth-child(2) td:nth-child(4)') %>% html_text
+ownership <- ownership[1]
+max.withdrawals.mgd <- water_webpage %>% html_nodes('th~ td:nth-child(6) , th~ td:nth-child(3)') %>% html_text
 
 ```
 
@@ -83,12 +91,20 @@ max.withdrawals.mgd <-
 
 ```{r create.a.dataframe.from.scraped.data}
 #4
+new_df <- data.frame(
+  "Water System Name" = rep(water.system.name),
+  "PSWID" = rep(pswid),
+  "Ownership" = rep(ownership),
+  "Maximum_Daily_Use" = max.withdrawals.mgd,
+  month = rep(1:12),
+  year = 2020
+)
 
-
-
+new_df <- new_df %>%
+  mutate(Date = my(paste(Month,"-",Year)))
 #5
-
-
+ggplot(new_df, aes(x=month, y=Maximum_Daily_Use)) + 
+  geom_point()
 
 ```
 

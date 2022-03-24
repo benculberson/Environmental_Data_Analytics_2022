@@ -252,6 +252,7 @@ my_df <-data.frame(
   "Capacity" = as.numeric(gsub(",","",the_capacity)),
   "Generation" = as.numeric(gsub(",","",net_generation)),
   "Retail Value" = as.numeric(gsub(",","",total_retail)),
+  Month
   year = 2019
 )
 ```
