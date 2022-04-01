@@ -11,7 +11,7 @@ nutrient_data <- nutrient_data %>%
   select(lakename, sampledate:po4)
 
 #### Define UI ----
-ui <- fluidPage(theme = shinytheme("yeti"),
+ui <- fluidPage(theme = shinytheme("cyborg"),
   titlePanel("Nutrients in Peter Lake and Paul Lake"),
   sidebarLayout(
     sidebarPanel(
@@ -20,7 +20,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
       selectInput(inputId = "y", 
                   label = "Nutrient",
                   choices = c("tn_ug", "tp_ug", "nh34", "no23", "po4"), 
-                  selected = "tp_ug"),
+                  selected = "no23"),
       
       # Select depth
       checkboxGroupInput(inputId = "fill",
@@ -84,9 +84,12 @@ shinyApp(ui = ui, server = server)
 
 #### Questions for coding challenge ----
 #1. Play with changing the options on the sidebar. 
-    # Choose a shinytheme that you like. The default here is "yeti"
-    # How do you change the default settings? 
-    # How does each type of widget differ in its code and how it references the dataframe?
+    # Choose a shinytheme that you like. The default here is "yeti" - I went with "cyborg"
+    # How do you change the default settings?
+      #-I just changed the default selection 
+    # How does each type of widget differ in its code and how it references the dataframe? 
+      #-They each reference the same data frame,
+      #-but specify different variables within that dataframe to use for different parts of the shinytheme
 #2. How is the mainPanel component of the UI structured? 
     # How does the output appear based on this code?
 #3. Explore the reactive formatting within the server.
